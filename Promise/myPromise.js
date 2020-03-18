@@ -9,7 +9,7 @@ class MyPromise {
         this.reason = null
         this.fulfilledCallback = []
         this.rejectedCallback = []
-        this.initBind()        
+        this.initBind()
         executor(this.resolve, this.reject)
     }
 
@@ -39,52 +39,67 @@ class MyPromise {
     }
 
     then(onFulfilled, onRejected) {
-        onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : () => {}
-        onRejected = typeof onRejected === 'function' ? onRejected : () => {}
+        onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value
+        onRejected = typeof onRejected === 'function' ? onRejected : reason => { throw reason }
+
+        let p
         if (this.status === FULFILLED) {
-            setTimeout(() => {
-                try {
-                    onFulfilled(this.value)
-                } catch (e) {
-                    onRejected(e)
-                }
+            p = new MyPromise((resolve, reject) => {
+                setTimeout(() => {
+                    try {
+                        let res = onFulfilled(this.value)
+                        resolve(res)
+                    } catch (e) {
+                        reject(e)
+                    }
+                })
             })
         }
 
         if (this.status === REJECTED) {
-            setTimeout(() => {
-                try {
-                    onRejected(this.reason)
-                } catch (e) {
-                    onRejected(e)
-                }
+            p = new MyPromise((resolve, reject) => {
+                setTimeout(() => {
+                    try {
+                        let res = onRejected(this.reason)
+                        resolve(res)
+                    } catch (e) {
+                        reject(e)
+                    }
+                })
             })
         }
 
         if (this.status === PENDING) {
-            this.fulfilledCallback.push(value => {
-                try {
-                    onFulfilled(value)
-                } catch (e) {
-                    onRejected(e)
-                }
-            })
+            p = new MyPromise((resolve, reject) => {
+                this.fulfilledCallback.push(value => {
+                    try {
+                        let res = onFulfilled(value)
+                        resolve(res)
+                    } catch (e) {
+                        reject(e)
+                    }
+                })
 
-            this.rejectedCallback.push(reason => {
-                try {
-                    onRejected(reason)
-                } catch (e) {
-                    onRejected(e)
-                }
+                this.rejectedCallback.push(reason => {
+                    try {
+                        let res = onRejected(reason)
+                        reject(res)
+                    } catch (e) {
+                        reject(e)
+                    }
+                })
             })
         }
+
+        return p
     }
 }
 
-let p = new MyPromise(resolve => setTimeout(() => resolve('setTimeout')))
+let p = new MyPromise((resolve,reject) => setTimeout(() => reject('error')))
 console.log('start')
-p.then(val => console.log(1, val))
-p.then(val => console.log(2, val))
-p.then(val => console.log(3, val))
+p
+.then()
+.then()
+.then()
+.then(()=>{}, val => console.log(1, val))
 console.log('----')
-
