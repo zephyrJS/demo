@@ -1,105 +1,39 @@
-const PENDING = 'PENDING'
-const FULFILLED = 'FULFILLED'
-const REJECTED = 'REJECTED'
+// 2.1 promise state
+const PENDING = 'pending'
+const FULFILLED = 'fulfilled'
+const REJECTED = 'rejected'
 
-class MyPromise {
-    constructor(executor) {
-        this.status = PENDING
-        this.value = null
-        this.reason = null
-        this.fulfilledCallback = []
-        this.rejectedCallback = []
-        this.initBind()
-        executor(this.resolve, this.reject)
-    }
-
-    initBind() {
-        this.resolve = this.resolve.bind(this)
-        this.reject = this.reject.bind(this)
-    }
-
-    resolve(value) {
-        if (this.status === PENDING) {
-            setTimeout(() => {
-                this.status = FULFILLED
-                this.value = value
-                this.fulfilledCallback.forEach(cb => cb(value))
-            })
-        }
-    }
-
-    reject(reason) {
-        if (this.status === PENDING) {
-            setTimeout(() => {
-                this.status = REJECTED
-                this.reason = reason
-                this.rejectedCallback.forEach(cb => cb(reason))
-            })
-        }
-    }
-
-    then(onFulfilled, onRejected) {
-        onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value
-        onRejected = typeof onRejected === 'function' ? onRejected : reason => { throw reason }
-
-        let p
-        if (this.status === FULFILLED) {
-            p = new MyPromise((resolve, reject) => {
-                setTimeout(() => {
-                    try {
-                        let res = onFulfilled(this.value)
-                        resolve(res)
-                    } catch (e) {
-                        reject(e)
-                    }
-                })
-            })
-        }
-
-        if (this.status === REJECTED) {
-            p = new MyPromise((resolve, reject) => {
-                setTimeout(() => {
-                    try {
-                        let res = onRejected(this.reason)
-                        resolve(res)
-                    } catch (e) {
-                        reject(e)
-                    }
-                })
-            })
-        }
-
-        if (this.status === PENDING) {
-            p = new MyPromise((resolve, reject) => {
-                this.fulfilledCallback.push(value => {
-                    try {
-                        let res = onFulfilled(value)
-                        resolve(res)
-                    } catch (e) {
-                        reject(e)
-                    }
-                })
-
-                this.rejectedCallback.push(reason => {
-                    try {
-                        let res = onRejected(reason)
-                        reject(res)
-                    } catch (e) {
-                        reject(e)
-                    }
-                })
-            })
-        }
-
-        return p
-    }
+function MyPromise() {
+    this.state = PENDING
+    this.result = null
 }
 
-let p = new MyPromise((resolve,reject) => setTimeout(() => reject('error')))
-console.log('start')
-p
-.then()
-.then()
-.then()
-.then(()=>{}, val => console.log(1, val))
-console.log('----')
+// 2.2 then Method
+MyPromise.prototype.then = function(onFulfilled, onRejected) {
+    // 2.2.1 如果 onFulfilled、onRejected，则忽略
+    onFulfilled = isFunction(onFulfilled) ? onFulfilled : () => {}
+    onRejected = isFunction(onRejected) ? onRejected : () => {}
+
+    return new MyPromise((resolve, reject) => {
+        let callback = { onFulfilled, onRejected, resolve, reject }
+        if(this.state === PENDING) {
+            this.callbacks.push(callback)
+        }else {
+            
+        }
+    })
+}
+
+// pending -> fulfilled or pending -> rejected
+// 2.1.1 如果 state 是 pending 的时候，可以转为 fulfilled 或者 rejected
+// 2.1.2 如果 state 是 fulfilled，状态不能改变，值为 value
+// 2.1.3 如果 state 是 rejected， 状态不可变，值为 reason
+const transition = (promise, state, result) => {
+    if (promise.state !== PENDING) return
+    promise.state = state
+    promise.result = result
+}
+
+const isFunction = fn => {
+    return typeof fn === 'function'
+}

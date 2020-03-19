@@ -1,0 +1,25 @@
+formItem = {
+    tag
+    key
+    itemAttrs // form-item 组件 $attrs
+    attrs
+    listeners
+    getAttrs
+    ifRender
+}
+
+basic = {
+    input: {
+        component: ''
+        attrs: {
+
+        }
+    }
+}
+
+// formItems 表单项数据
+// basic 设置通用配置
+// model 由 formItems 生成用于提交的数据
+// computedFormItem 根据 formItem 和 model 来生成用于真实渲染的数
+// 表单校验
+// 获取自定义 option
