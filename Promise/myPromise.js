@@ -6,6 +6,7 @@ const REJECTED = 'rejected'
 function MyPromise() {
     this.state = PENDING
     this.result = null
+    this.callbacks = []
 }
 
 // 2.2 then Method
@@ -19,7 +20,7 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
         if(this.state === PENDING) {
             this.callbacks.push(callback)
         }else {
-            
+            handleCallback(callback, this.state, this.result)
         }
     })
 }
