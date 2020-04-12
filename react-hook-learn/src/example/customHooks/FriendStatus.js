@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useDebugValue } from 'react'
 import ChatApi from '../ChatApi'
 
 function useFriednStatus(friendID) {
@@ -14,6 +14,8 @@ function useFriednStatus(friendID) {
             ChatApi.unsubscribeToFriendStatus(friendID, handleStatusChange)
         }
     })
+
+    // useDebugValue(isOnline ? 'Online' : 'Offline')
 
     return isOnline
 }

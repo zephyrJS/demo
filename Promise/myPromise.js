@@ -1,40 +1,80 @@
-// 2.1 promise state
 const PENDING = 'pending'
 const FULFILLED = 'fulfilled'
 const REJECTED = 'rejected'
 
-function MyPromise() {
-    this.state = PENDING
-    this.result = null
-    this.callbacks = []
-}
+class Promise {
+    constructor(executor) {
+        this.state = PENDING
+        this.value = null
+        this.reason = null
+        this.onFulfilledCallbacks = []
+        this.onRejectedCallbacks = []
 
-// 2.2 then Method
-MyPromise.prototype.then = function(onFulfilled, onRejected) {
-    // 2.2.1 如果 onFulfilled、onRejected，则忽略
-    onFulfilled = isFunction(onFulfilled) ? onFulfilled : () => {}
-    onRejected = isFunction(onRejected) ? onRejected : () => {}
-
-    return new MyPromise((resolve, reject) => {
-        let callback = { onFulfilled, onRejected, resolve, reject }
-        if(this.state === PENDING) {
-            this.callbacks.push(callback)
-        }else {
-            handleCallback(callback, this.state, this.result)
+        let resolve = (value) => {
+            if (this.state === PENDING) {
+                this.state = FULFILLED
+                this.value = value
+                this.onFulfilledCallbacks.forEach((fn) => fn(this.value))
+            }
         }
-    })
+
+        let reject = (reason) => {
+            if (this.state === PENDING) {
+                this.state = REJECTED
+                this.value = reason
+                this.onRejectedCallbacks.forEach((fn) => fn(this.reason))
+            }
+        }
+
+        try {
+            executor(resolve, reject)
+        } catch (e) {
+            reject(e)
+        }
+    }
+
+    then(onFulfilled, onRejected) {
+        onFulfilled =
+            typeof onFulfilled === 'function' ? onFulfilled : (value) => value
+        onRejected =
+            typeof onRejected === 'function'
+                ? onRejected
+                : (reason) => {throw reason}
+
+        const promise2 = new Promise((resolve, reject) => {
+            if (this.state === FULFILLED) {
+                setTimeout(() => {
+                    let x = onFulfilled(this.value)
+                    resolve(x)
+                })
+            }
+
+            if (this.state === REJECTED) {
+                setTimeout(() => {
+                    let x = onRejected(this.value)
+                    resolve(x)
+                })
+            }
+
+            if (this.state === PENDING) {
+                this.onFulfilledCallbacks.push((value) => {
+                    setTimeout(() => {
+                        let x = onFulfilled(this.value)
+                        resolve(x)
+                    })
+                })
+
+                this.onRejectedCallbacks.push((reason) => {
+                    setTimeout(() => {
+                        let x = onRejected(this.reason)
+                        resolve(x)
+                    })
+                })
+            }
+        })
+
+        return promise2
+    }
 }
 
-// pending -> fulfilled or pending -> rejected
-// 2.1.1 如果 state 是 pending 的时候，可以转为 fulfilled 或者 rejected
-// 2.1.2 如果 state 是 fulfilled，状态不能改变，值为 value
-// 2.1.3 如果 state 是 rejected， 状态不可变，值为 reason
-const transition = (promise, state, result) => {
-    if (promise.state !== PENDING) return
-    promise.state = state
-    promise.result = result
-}
-
-const isFunction = fn => {
-    return typeof fn === 'function'
-}
+module.exports = Promise
