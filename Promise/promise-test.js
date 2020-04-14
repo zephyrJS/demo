@@ -1,14 +1,18 @@
 const Promise = require('./myPromise')
-
 console.log(1)
 const promise1 = new Promise(function (resolve) {
-    setTimeout(() => {
-        console.log(3)
-        resolve()
+    console.log(2)
+    resolve(new Promise(resolve => {
+        resolve(new Promise(resolve => {
+            resolve(4)
+        }))
+    }))
+}).then(value => {
+    console.log(value)
+    return new Promise(resolve => {
+        resolve(5)
     })
 }).then(value => {
-    console.log(4)    
-}).then(value => {
-    console.log(5)
+    console.log(value)
 })
-console.log(2)
+console.log(3)
